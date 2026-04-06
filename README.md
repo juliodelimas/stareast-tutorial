@@ -1,4 +1,4 @@
-# Starwest E-commerce API
+# STAREAST E-commerce API
 
 A REST API for e-commerce built with JavaScript and Express.js that provides JWT authentication and checkout functionality.
 
