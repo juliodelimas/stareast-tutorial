@@ -1,0 +1,373 @@
+openapi: 3.0.0
+info:
+  title: Starwest E-commerce API
+  description: REST API for e-commerce with JWT authentication and checkout functionality
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@starwest.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and return JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                    example: password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          email:
+                            type: string
+                            example: john@example.com
+                          name:
+                            type: string
+                            example: John Doe
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/register:
+    post:
+      summary: User registration
+      description: Register a new user and return JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: newuser@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: password123
+                name:
+                  type: string
+                  example: New User
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User registered successfully
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 4
+                          email:
+                            type: string
+                            example: newuser@example.com
+                          name:
+                            type: string
+                            example: New User
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /checkout:
+    post:
+      summary: Process checkout
+      description: Process a checkout order (requires authentication)
+      tags:
+        - Checkout
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+                - paymentMethod
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - productId
+                      - quantity
+                    properties:
+                      productId:
+                        type: integer
+                        example: 1
+                      quantity:
+                        type: integer
+                        minimum: 1
+                        example: 2
+                paymentMethod:
+                  type: string
+                  enum: [cash, credit_card]
+                  example: cash
+      responses:
+        '200':
+          description: Checkout completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Checkout completed successfully
+                  data:
+                    type: object
+                    properties:
+                      order:
+                        $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /checkout/payment-methods:
+    get:
+      summary: Get available payment methods
+      description: Get list of available payment methods and cash discount information
+      tags:
+        - Checkout
+      responses:
+        '200':
+          description: Payment methods retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Payment methods retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      paymentMethods:
+                        type: array
+                        items:
+                          type: string
+                        example: [cash, credit_card]
+                      cashDiscount:
+                        type: string
+                        example: 10%
+
+  /health:
+    get:
+      summary: Health check
+      description: Check API health status and system information
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: API is healthy
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: healthy
+                      timestamp:
+                        type: string
+                        format: date-time
+                      uptime:
+                        type: number
+                        example: 123.456
+                      memory:
+                        type: object
+                        properties:
+                          rss:
+                            type: number
+                          heapTotal:
+                            type: number
+                          heapUsed:
+                            type: number
+                          external:
+                            type: number
+                      data:
+                        type: object
+                        properties:
+                          totalProducts:
+                            type: integer
+                            example: 3
+                          totalUsers:
+                            type: integer
+                            example: 3
+                          totalStock:
+                            type: integer
+                            example: 85
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error message
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1703123456789
+        userId:
+          type: integer
+          example: 1
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: integer
+                example: 1
+              productName:
+                type: string
+                example: Laptop
+              quantity:
+                type: integer
+                example: 2
+              unitPrice:
+                type: number
+                example: 999.99
+              total:
+                type: number
+                example: 1999.98
+        paymentMethod:
+          type: string
+          example: cash
+        subtotal:
+          type: number
+          example: 1999.98
+        discount:
+          type: number
+          example: 199.998
+        total:
+          type: number
+          example: 1799.982
+        status:
+          type: string
+          example: completed
+        createdAt:
+          type: string
+          format: date-time
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: Checkout
+    description: Checkout and payment processing
+  - name: System
+    description: System health and monitoring
